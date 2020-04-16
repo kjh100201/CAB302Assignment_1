@@ -11,10 +11,10 @@ public class Viewer {
         // Create the billboard viewer GUI object
         JFrame frame = createBillboardViewer();
 
-        // Put a default message in the viewer
-        JLabel label = new JLabel("I am the billboard viewer", SwingConstants.CENTER);
-        label.setFont(defaultFont);
-        frame.getContentPane().add(label);
+        // Format the billboard GUI according the specifications of a selected XML document
+        String filePath = "xml_docs/billboard10.xml";
+        BillboardFormatter.format(frame, filePath);
+
         frame.setVisible(true);
     }
 
@@ -34,8 +34,7 @@ public class Viewer {
         frame.addKeyListener(new KeyListener() {
             @Override
             public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-                {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     System.exit(0);
                 }
             }
@@ -48,8 +47,7 @@ public class Viewer {
         frame.addMouseListener(new MouseListener() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                if(e.getButton() == MouseEvent.BUTTON1)
-                {
+                if(e.getButton() == MouseEvent.BUTTON1) {
                     System.exit(0);
                 }
             }
