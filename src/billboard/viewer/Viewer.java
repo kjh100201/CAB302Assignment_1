@@ -5,8 +5,6 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class Viewer {
-    static Font defaultFont = new Font("Arial", Font.PLAIN, 20);
-
     public static void main(String[] args) {
         // Create the billboard viewer GUI object
         JFrame frame = createBillboardViewer();

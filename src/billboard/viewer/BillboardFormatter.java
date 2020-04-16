@@ -18,61 +18,89 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 
+
 public class BillboardFormatter {
-    static final String default_bg_colour = "#F5F5F5";
+    static final String default_bg_colour = "#666666";  // TODO change default bg back to F5F5F5
     static final String default_text_colour = "#000000";
 
     public static void format(JFrame frame, String xmlPath) {
         String xml = readFileToString(xmlPath);
         if (xml == null) {
-            System.exit(0);  //TODO: handle continued operation when server request loop is operational.
+            System.exit(0);  //TODO: implement error screen when not working instead of exiting.
         }
-
-        // Temporary text demo
-        JTextArea text = new JTextArea();
-        text.setLineWrap(true);
-        text.setWrapStyleWord(true);
-        text.setEditable(false);
-        text.setFocusable(false);
-        text.append(xml);
-        frame.getContentPane().add(text);
 
         Document doc = generateDOMfromXML(xml);
         if (doc == null) {
-            System.exit(0);  //TODO: handle continued operation when server request loop is operational.
+            System.exit(0);  //TODO: implement error screen when not working instead of exiting.
         }
 
-
-        // Get the elements of the billboard
-        Element billboard = null;
-        Element message = null;
-        Element picture = null;
-        Element info = null;
-        try {
-            billboard = doc.getDocumentElement();
-            message = (Element) doc.getElementsByTagName("message").item(0);
-            picture = (Element) doc.getElementsByTagName("picture").item(0);
-            info = (Element) doc.getElementsByTagName("information").item(0);
+        ArrayList<Element> billboardElements = getBillboardElements(doc);
+        if (billboardElements == null) {
+            System.err.println("The billboard is either empty or invalid.");
+            System.exit(0);  //TODO: implement error screen when not working instead of exiting.
         }
-        catch (Exception e) {
-            System.out.println("Invalid billboard XML format");
-            System.exit(0);  //TODO set the error billboard and continue operation
+
+        Color bg_colour = getBackgroundColour(billboardElements.get(0));
+        frame.getContentPane().setBackground(bg_colour);
+
+        addMessageToBillboard(frame, billboardElements);
+        addImageToBillboard(frame, billboardElements);
+        addInfoToBillboard(frame, billboardElements);
+    }
+
+
+    /**
+     * Adds a message panel to the billboard GUI.
+     * @param frame JFrame to add the message panel to.
+     * @param billboardElements List of elements loaded from the billboard XML model.
+     */
+    private static void addMessageToBillboard(JFrame frame, ArrayList<Element> billboardElements) {
+        Element messageElement = billboardElements.get(1);
+        if (messageElement != null) {
+            String msg = getElementText(messageElement);
+            JLabel message = new JLabel(msg, SwingConstants.CENTER);
+            message.setForeground(getTextColour(messageElement));
+            frame.getContentPane().add(message);
         }
     }
 
 
     /**
-     * Gets the the element with name 'tagName' from the specified document object model (DOM).
-     * @param dom Document object model to retrieve the element from.
-     * @param tagName Tag name of the element to retrieve.
-     * @return The first matching requested element, or null if none exist.
+     * Adds an image panel to the billboard GUI.
+     * @param frame JFrame to add the image panel to.
+     * @param billboardElements List of elements loaded from the billboard XML model.
      */
-    private Element getDOMElement(Document dom, String tagName) {
-        try {
-            return (Element) dom.getElementsByTagName(tagName).item(0);
+    private static void addImageToBillboard(JFrame frame, ArrayList<Element> billboardElements) {
+        Element pictureElement = billboardElements.get(2);
+        if (pictureElement != null) {
+            Image image = getElementImage(pictureElement);
+            if (image == null) {
+                return;
+            }
+            JLabel picture = new JLabel(new ImageIcon(image), SwingConstants.CENTER);
+            frame.getContentPane().add(picture);
         }
-        catch (Exception ignored) {}
-        return null;
+    }
+
+
+    /**
+     * Adds an information panel to the billboard GUI.
+     * @param frame JFrame to add the information panel to.
+     * @param billboardElements List of elements loaded from the billboard XML model.
+     */
+    private static void addInfoToBillboard(JFrame frame, ArrayList<Element> billboardElements)
+    {
+        Element infoElement = billboardElements.get(3);
+        if (infoElement != null) {
+            String info = getElementText(infoElement);
+            JTextArea text = new JTextArea(info);
+            text.setLineWrap(true);
+            text.setWrapStyleWord(true);
+            text.setEditable(false);
+            text.setFocusable(false);
+            text.setFont(new Font("Arial", Font.PLAIN, 40));    //TODO remove this
+            frame.getContentPane().add(text);
+        }
     }
 
 
@@ -80,11 +108,11 @@ public class BillboardFormatter {
      * Creates a list of the four billboard elements from the DOM. These elements are defined by tag names: 'billboard',
      * 'message', 'picture' and 'information'. The element positions in the list store a null if that element is not
      * defined by the billboard XML.
-     * @param doc DOM representation of the XML billboard layout
+     * @param doc DOM representation of the XML billboard layout.
      * @return A list of the four billboard elements from the DOM. Returns null if the billboard would have nothing to
      * display, or if the billboard is empty.
      */
-    private ArrayList<Element> getBillboardElements(Document doc) {
+    private static ArrayList<Element> getBillboardElements(Document doc) {
         ArrayList<Element> billboardElements = new ArrayList<>();
 
         // Check that the loaded xml is a billboard
@@ -98,7 +126,7 @@ public class BillboardFormatter {
         billboardElements.add(getDOMElement(doc, "information"));
 
         // Check that the billboard has something to display
-        if (billboardElements.get(1) == null & billboardElements.get(2) == null & billboardElements.get(0) == null) {
+        if (billboardElements.get(1) == null && billboardElements.get(2) == null && billboardElements.get(3) == null) {
             return null;
         }
 
@@ -107,11 +135,26 @@ public class BillboardFormatter {
 
 
     /**
+     * Gets the the element with name 'tagName' from the specified document object model (DOM).
+     * @param dom Document object model to retrieve the element from.
+     * @param tagName Tag name of the element to retrieve.
+     * @return The first matching requested element, or null if none exist.
+     */
+    private static Element getDOMElement(Document dom, String tagName) {
+        try {
+            return (Element) dom.getElementsByTagName(tagName).item(0);
+        }
+        catch (Exception ignored) {}
+        return null;
+    }
+
+
+    /**
      * Gets the text content of the specified element.
      * @param element Element to retrieve the text from.
      * @return The text content of the element.
      */
-    private String getElementText(Element element) {
+    private static String getElementText(Element element) {
         return element.getTextContent();
     }
 
@@ -121,7 +164,7 @@ public class BillboardFormatter {
      * @param url URL to retrieve the image from.
      * @return The image at the specified URL. Returns null if the URL was not valid.
      */
-    private Image getImageFromURL(URL url) {
+    private static Image getImageFromURL(URL url) {
         try {
             BufferedImage image = ImageIO.read(url);
             return (Image) image;
@@ -137,7 +180,7 @@ public class BillboardFormatter {
      * @param imageData Base64 image data to decode.
      * @return The decoded image. Returns null if the decoding was unsuccessful.
      */
-    private Image decodeImageFromBase64(String imageData) {
+    private static Image decodeImageFromBase64(String imageData) {
         byte[] byteImage = Base64.getDecoder().decode(imageData);
         ByteArrayInputStream inStream = new ByteArrayInputStream(byteImage);
         try {
@@ -156,7 +199,7 @@ public class BillboardFormatter {
      * @return The image. Returns null if the image could not be decoded, or if no image could be retrieved from the
      * specified url.
      */
-    private Image getElementImage(Element element) {
+    private static Image getElementImage(Element element) {
         String picture_url = element.getAttribute("url");
         if (!picture_url.equals("")) {
             try {
@@ -183,7 +226,7 @@ public class BillboardFormatter {
      * @param element Element to get the background colour for.
      * @return Colour of the background.
      */
-    private Color getBackgroundColour(Element element) {
+    private static Color getBackgroundColour(Element element) {
         String billboard_background = element.getAttribute("background");
         if (billboard_background.equals("")) {
             billboard_background = default_bg_colour;
@@ -197,7 +240,7 @@ public class BillboardFormatter {
      * @param element Element to get the text colour for.
      * @return Colour of the text.
      */
-    private Color getTextColour(Element element) {
+    private static Color getTextColour(Element element) {
         String message_colour = element.getAttribute("colour");
         if (message_colour.equals("")) {
             message_colour = default_text_colour;
