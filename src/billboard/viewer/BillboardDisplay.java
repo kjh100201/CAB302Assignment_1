@@ -8,6 +8,11 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
+/**
+ * Creates a resizable JPanel showing the graphical elements of the billboard loaded from XML. This can either server
+ * as a preview for a billboard designer, or as the billboard viewer when used by the BillboardFrame class.
+ * @see BillboardFrame This class uses BillboardDisplay to create the billboard viewer.
+ */
 public class BillboardDisplay extends JPanel {
     // Configuration constants
     static private final String default_bg_colour = "#F5F5F5";  // TODO change default background back to F5F5F5

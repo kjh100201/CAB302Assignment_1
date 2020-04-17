@@ -21,6 +21,9 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 
+/**
+ * This class contains various useful methods that perform IO operations used by the billboard.
+ */
 public class BillboardIO {
     /**
      * Gets the image at the specified url.

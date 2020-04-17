@@ -8,7 +8,8 @@ import java.awt.event.MouseListener;
 
 
 /**
- * Fullscreen billboard display. An instance of this serves as the billboard viewer.
+ * Fullscreen billboard display as a JFrame window. An instance of this class serves as the billboard viewer. Uses the
+ * BillboardDisplay class to actually show the graphical elements loaded from XML.
  */
 public class BillboardFrame extends JFrame {
     /**
