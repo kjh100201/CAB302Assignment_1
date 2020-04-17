@@ -5,8 +5,9 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class Viewer {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         // Create the billboard viewer GUI object
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         JFrame frame = createBillboardViewer();
 
         // Format the billboard GUI according the specifications of a selected XML document

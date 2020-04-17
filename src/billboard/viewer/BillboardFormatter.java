@@ -1,6 +1,8 @@
 package billboard.viewer;
 
 import javax.imageio.ImageIO;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
@@ -20,10 +22,12 @@ import java.util.Base64;
 
 
 public class BillboardFormatter {
-    static final String default_bg_colour = "#666666";  // TODO change default bg back to F5F5F5
+    static final String default_bg_colour = "#F5F5F5";  // TODO change default background back to F5F5F5
     static final String default_text_colour = "#000000";
 
     public static void format(JFrame frame, String xmlPath) {
+        frame.setLayout(new GridLayout(3, 1));  //TODO: put this in a better spot in the code
+
         String xml = readFileToString(xmlPath);
         if (xml == null) {
             System.exit(0);  //TODO: implement error screen when not working instead of exiting.
@@ -60,6 +64,7 @@ public class BillboardFormatter {
             String msg = getElementText(messageElement);
             JLabel message = new JLabel(msg, SwingConstants.CENTER);
             message.setForeground(getTextColour(messageElement));
+            message.setFont(new Font("Arial", Font.PLAIN, 40));    //TODO: remove this
             frame.getContentPane().add(message);
         }
     }
@@ -99,6 +104,12 @@ public class BillboardFormatter {
             text.setEditable(false);
             text.setFocusable(false);
             text.setFont(new Font("Arial", Font.PLAIN, 40));    //TODO remove this
+
+            Color bg_colour = getBackgroundColour(billboardElements.get(0));
+            text.setBackground(bg_colour);
+            Color fg_colour = getTextColour(infoElement);
+            text.setForeground(fg_colour);
+
             frame.getContentPane().add(text);
         }
     }
