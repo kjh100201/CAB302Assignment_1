@@ -1,6 +1,7 @@
 package billboard.viewer;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -28,14 +29,20 @@ public class BillboardFrame extends JFrame {
         // Format the billboard GUI according the specifications of a selected XML document
         String xmlFilePath = "xml_docs/billboard10.xml";
 
-        // Set as full screen application
+        // Set as borderless full screen application
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setUndecorated(true);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        setExitInputs();
-        BillboardDisplay billboard = new BillboardDisplay(xmlFilePath);
+        BillboardDisplay billboard = new BillboardDisplay(xmlFilePath, screenSize);
         getContentPane().add(billboard);
+
+        // Set the user inputs that will quit the program
+        setExitInputs();
+
+        // Pack the frame contents
+        pack();
     }
 
 

@@ -3,6 +3,9 @@ package billboard.viewer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import javax.swing.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -17,14 +20,20 @@ public class BillboardDisplay extends JPanel {
     // Configuration constants
     static private final String default_bg_colour = "#F5F5F5";  // TODO change default background back to F5F5F5
     static private final String default_text_colour = "#000000";
+    static private final Font default_font = new Font(Font.SANS_SERIF, Font.PLAIN, 40);
 
     // Cached references
-    Document doc;   // DOM representation of the loaded XML file.
-    ArrayList<Element> billboardElements;   // List of billboard elements in the DOM.
+    private Dimension displaySize;
+    private Document doc;   // DOM representation of the loaded XML file.
+    private ArrayList<Element> billboardElements;   // List of billboard elements in the DOM.
 
-    public BillboardDisplay(String xmlPath) {
-        setLayout(new GridLayout(0, 1));  //TODO: PROBABLY MAKE THIS GRID BAG LAYOUT
+    public BillboardDisplay(String xmlPath, Dimension displaySize) {
+        this.displaySize = displaySize;
 
+        setLayout(new GridBagLayout());
+        // Display size set to be static so that pack() will not mess up the layout.
+        setPreferredSize(displaySize);
+        
         String xml = BillboardIO.getFileContentsAsString(xmlPath);
         if (xml == null) {
             System.exit(0);  //TODO: implement error screen when not working instead of exiting.
@@ -41,9 +50,7 @@ public class BillboardDisplay extends JPanel {
             System.exit(0);  //TODO: implement error screen when not working instead of exiting.
         }
 
-        Color bg_colour = getBackgroundColour(billboardElements.get(0));
-        setBackground(bg_colour);
-
+        setBackgroundColour();
         addMessageToBillboard();
         addImageToBillboard();
         addInfoToBillboard();
@@ -66,9 +73,9 @@ public class BillboardDisplay extends JPanel {
         }
 
         billboardElements.add(doc.getDocumentElement());
-        billboardElements.add(getDOCelement(doc, "message"));
-        billboardElements.add(getDOCelement(doc, "picture"));
-        billboardElements.add(getDOCelement(doc, "information"));
+        billboardElements.add(getDocElement(doc, "message"));
+        billboardElements.add(getDocElement(doc, "picture"));
+        billboardElements.add(getDocElement(doc, "information"));
 
         // Check that the billboard has something to display
         if (billboardElements.get(1) == null && billboardElements.get(2) == null && billboardElements.get(3) == null) {
@@ -76,6 +83,15 @@ public class BillboardDisplay extends JPanel {
         }
 
         return billboardElements;
+    }
+
+
+    /**
+     * Sets the billboard background colour.
+     */
+    private void setBackgroundColour() {
+        Color bg_colour = getBackgroundColour(billboardElements.get(0));
+        setBackground(bg_colour);
     }
 
 
@@ -88,8 +104,16 @@ public class BillboardDisplay extends JPanel {
             String msg = getElementText(messageElement);
             JLabel message = new JLabel(msg, SwingConstants.CENTER);
             message.setForeground(getTextColour(messageElement));
-            message.setFont(new Font("Arial", Font.PLAIN, 40));    //TODO: remove this
-            add(message);
+            message.setFont(default_font);    //TODO: make this dynamic size
+
+            GridBagConstraints c = new GridBagConstraints();
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.anchor = GridBagConstraints.CENTER;
+            c.weighty = 0.1;
+            c.weightx = 0.1;
+            c.gridx = 0;
+            c.gridy = 0;
+            add(message, c);
         }
     }
 
@@ -102,10 +126,26 @@ public class BillboardDisplay extends JPanel {
         if (pictureElement != null) {
             Image image = getElementImage(pictureElement);
             if (image == null) {
-                return;
+                return;     //TODO make this case go to the error screen
             }
-            JLabel picture = new JLabel(new ImageIcon(image), SwingConstants.CENTER);
-            add(picture);
+
+            // TODO: Clean up and move this to a separate class
+            Dimension currentImageSize = new Dimension(image.getWidth(null), image.getHeight(null));
+            Dimension imageBoundarySize = new Dimension(displaySize.width / 3, displaySize.height / 3);
+            Dimension newImageSize = scaleImageDimensions(imageBoundarySize, currentImageSize);
+            Image scaledImage = image.getScaledInstance(newImageSize.width, newImageSize.height, Image.SCALE_SMOOTH);
+
+            //TODO: Add image scaling, perhaps extend JLabel to create a new type
+            JLabel picture = new JLabel(new ImageIcon(scaledImage), SwingConstants.CENTER);
+
+            GridBagConstraints c = new GridBagConstraints();
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.anchor = GridBagConstraints.CENTER;
+            c.weighty = 0.1;
+            c.weightx = 0.1;
+            c.gridx = 0;
+            c.gridy = 1;
+            add(picture, c);
         }
     }
 
@@ -117,20 +157,32 @@ public class BillboardDisplay extends JPanel {
     {
         Element infoElement = billboardElements.get(3);
         if (infoElement != null) {
-            String info = getElementText(infoElement);
-            JTextArea text = new JTextArea(info);
-            text.setLineWrap(true);
-            text.setWrapStyleWord(true);
-            text.setEditable(false);
-            text.setFocusable(false);
-            text.setFont(new Font("Arial", Font.PLAIN, 40));    //TODO remove this
+            String text = getElementText(infoElement);
+            JTextPane info = new JTextPane();
+            info.setText(text);
+
+            StyledDocument infoText = info.getStyledDocument();
+            SimpleAttributeSet textAttr = new SimpleAttributeSet();
+            StyleConstants.setAlignment(textAttr, StyleConstants.ALIGN_CENTER);
+            infoText.setParagraphAttributes(0, infoText.getLength(), textAttr, false);
+
+            info.setEditable(false);
+            info.setFocusable(false);
+            info.setFont(default_font);    //TODO make this dynamic size
 
             Color bg_colour = getBackgroundColour(billboardElements.get(0));
-            text.setBackground(bg_colour);
+            info.setBackground(bg_colour);
             Color fg_colour = getTextColour(infoElement);
-            text.setForeground(fg_colour);
+            info.setForeground(fg_colour);
 
-            add(text);
+            GridBagConstraints c = new GridBagConstraints();
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.anchor = GridBagConstraints.CENTER;
+            c.weighty = 0.1;
+            c.weightx = 0.1;
+            c.gridx = 0;
+            c.gridy = 2;
+            add(info, c);
         }
     }
 
@@ -141,7 +193,7 @@ public class BillboardDisplay extends JPanel {
      * @param tagName Tag name of the element to retrieve.
      * @return The first matching requested element, or null if none exist.
      */
-    private Element getDOCelement(Document doc, String tagName) {
+    private Element getDocElement(Document doc, String tagName) {
         try {
             return (Element) doc.getElementsByTagName(tagName).item(0);
         }
@@ -213,5 +265,30 @@ public class BillboardDisplay extends JPanel {
             message_colour = default_text_colour;
         }
         return Color.decode(message_colour);
+    }
+
+
+    /**
+     * Finds the dimensions (in pixels) of an image once it has been scaled to fit inside a bounding box of given size.
+     * The new dimensions retain the original aspect ratio.
+     * @param imageBoundarySize The size of the rectangular boundary inside which the image needs to fit.
+     * @param currentImageSize The current image dimensions.
+     * @return The scaled image dimensions with aspect ratio maintained.
+     */
+    private Dimension scaleImageDimensions(Dimension imageBoundarySize, Dimension currentImageSize) {
+        int currentWidth = currentImageSize.width;
+        int currentHeight = currentImageSize.height;
+        int boundaryWidth = imageBoundarySize.width;
+        int boundaryHeight = imageBoundarySize.height;
+
+        int newWidth = boundaryWidth;
+        int newHeight = (newWidth * currentHeight) / currentWidth;
+
+        if (newHeight > boundaryHeight) {
+            newHeight = boundaryHeight;
+            newWidth = (newHeight * currentWidth) / currentHeight;
+        }
+
+        return new Dimension(newWidth, newHeight);
     }
 }
