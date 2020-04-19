@@ -18,8 +18,12 @@ import java.util.ArrayList;
  */
 public class BillboardDisplay extends JPanel {
     // Configuration constants
-    static private final String default_bg_colour = "#F4F4F4";
-    static private final String default_text_colour = "#000000";
+    static final int BILLBOARD = 0;
+    static final int MESSAGE = 1;
+    static final int PICTURE = 2;
+    static final int INFORMATION = 3;
+    static private final String DEFAULT_BG_COLOUR = "#F4F4F4";
+    static private final String DEFAULT_TEXT_COLOUR = "#000000";
 
     // Cached references
     private Dimension displaySize;
@@ -77,7 +81,7 @@ public class BillboardDisplay extends JPanel {
         billboardElements.add(getDocElement(doc, "information"));
 
         // Check that the billboard has something to display
-        if (billboardElements.get(1) == null && billboardElements.get(2) == null && billboardElements.get(3) == null) {
+        if (billboardElements.get(MESSAGE) == null && billboardElements.get(PICTURE) == null && billboardElements.get(INFORMATION) == null) {
             return null;
         }
 
@@ -103,9 +107,10 @@ public class BillboardDisplay extends JPanel {
             String msg = getElementText(messageElement);
             JLabel message = new JLabel(msg, SwingConstants.CENTER);
             message.setForeground(getTextColour(messageElement));
-            message.setPreferredSize(new Dimension(displaySize.width, displaySize.height/3));   //TODO: make this dynamic
-            Font font = scaleFont(msg, new Dimension(displaySize.width, displaySize.height/3));    //TODO: Make this dynamic
+            Dimension messageDimensions = getMessageDimensions();
+            message.setPreferredSize(messageDimensions);
 
+            Font font = scaleSingleLineFont(msg, messageDimensions);
             message.setFont(font);
 
             GridBagConstraints c = new GridBagConstraints();
@@ -133,13 +138,13 @@ public class BillboardDisplay extends JPanel {
 
             // TODO: Clean up and move this to a separate class
             Dimension currentImageSize = new Dimension(image.getWidth(null), image.getHeight(null));
-            Dimension imageBoundarySize = new Dimension(displaySize.width / 3, displaySize.height / 3);
+            Dimension imageBoundarySize = getPictureImageDimensions();
             Dimension newImageSize = scaleImageDimensions(imageBoundarySize, currentImageSize);
             Image scaledImage = image.getScaledInstance(newImageSize.width, newImageSize.height, Image.SCALE_SMOOTH);
 
             //TODO: Add image scaling, perhaps extend JLabel to create a new type
             JLabel picture = new JLabel(new ImageIcon(scaledImage), SwingConstants.CENTER);
-            picture.setPreferredSize(new Dimension(displaySize.width, displaySize.height/3));
+            picture.setPreferredSize(getPictureDimensions());
 
             GridBagConstraints c = new GridBagConstraints();
             c.anchor = GridBagConstraints.CENTER;
@@ -158,7 +163,8 @@ public class BillboardDisplay extends JPanel {
         Element infoElement = billboardElements.get(3);
         if (infoElement != null) {
             JPanel panel = new JPanel(new GridBagLayout());
-            panel.setPreferredSize(new Dimension((int) (displaySize.width*0.75), displaySize.height/3));    //TODO make this dynamic
+            Dimension infoDimensions = getInfoDimensions();
+            panel.setPreferredSize(infoDimensions);
 
             String text = getElementText(infoElement);
             JTextPane info = new JTextPane();
@@ -171,7 +177,7 @@ public class BillboardDisplay extends JPanel {
 
             info.setEditable(false);
             info.setFocusable(false);
-            Font font = scaleMultilineFont(text, new Dimension((int) (displaySize.width*0.75), displaySize.height/3), maxFontSize);  //TODO make this dynamic
+            Font font = scaleMultilineFont(text, infoDimensions, maxFontSize - 1);
             info.setFont(font);
 
             Color bg_colour = getBackgroundColour(billboardElements.get(0));
@@ -259,7 +265,7 @@ public class BillboardDisplay extends JPanel {
     private Color getBackgroundColour(Element element) {
         String billboard_background = element.getAttribute("background");
         if (billboard_background.equals("")) {
-            billboard_background = default_bg_colour;
+            billboard_background = DEFAULT_BG_COLOUR;
         }
         return Color.decode(billboard_background);
     }
@@ -273,9 +279,54 @@ public class BillboardDisplay extends JPanel {
     private Color getTextColour(Element element) {
         String message_colour = element.getAttribute("colour");
         if (message_colour.equals("")) {
-            message_colour = default_text_colour;
+            message_colour = DEFAULT_TEXT_COLOUR;
         }
         return Color.decode(message_colour);
+    }
+
+
+    private Dimension getMessageDimensions() {
+        System.out.println("Reached getMessageDimensions");     //TODO remove
+        if (billboardElements.get(PICTURE) == null && billboardElements.get(INFORMATION) == null) {
+            return new Dimension(displaySize.width, displaySize.height);
+        }
+        if (billboardElements.get(PICTURE) == null) {   //Implies that the information component is not null
+            return new Dimension(displaySize.width, displaySize.height/2);
+        }
+        return new Dimension(displaySize.width, displaySize.height/3);
+    }
+
+
+    private Dimension getPictureDimensions() {
+        System.out.println("Reached getPictureDimensions");     //TODO remove
+        if (billboardElements.get(MESSAGE) == null && billboardElements.get(INFORMATION) == null) {
+            return new Dimension(displaySize.width, displaySize.height);
+        }
+        if (billboardElements.get(MESSAGE) == null || billboardElements.get(INFORMATION) == null) {
+            return new Dimension(displaySize.width, 2*displaySize.height/3);
+        }
+        return new Dimension(displaySize.width, displaySize.height/3);
+    }
+
+
+    private Dimension getPictureImageDimensions() {
+        System.out.println("Reached getPictureImageDimensions");    //TODO remove
+        if (billboardElements.get(MESSAGE) != null && billboardElements.get(INFORMATION) != null) {
+            return new Dimension(displaySize.width/3, displaySize.height/3);
+        }
+        return new Dimension(displaySize.width/2, displaySize.height/2);
+    }
+
+
+    private Dimension getInfoDimensions() {
+        System.out.println("Reached getInfoDimensions");        //TODO remove
+        if (billboardElements.get(MESSAGE) == null && billboardElements.get(INFORMATION) == null) {
+            return new Dimension((int) (displaySize.width*0.75), displaySize.height/2);
+        }
+        if (billboardElements.get(MESSAGE) == null) {   //Implies that the information component is not null
+            return new Dimension((int) (displaySize.width*0.75), displaySize.height/2);
+        }
+        return new Dimension((int) (displaySize.width*0.75), displaySize.height/3);
     }
 
 
@@ -304,39 +355,55 @@ public class BillboardDisplay extends JPanel {
     }
 
 
-    private Font scaleFont(String text, Dimension size) {
+    /**
+     * Returns a font with a size such that the String 'text' will fit entirely within the Dimension 'size' on one line.
+     * @param text The string of text to fit within the bounds
+     * @param size The dimensions to fit the text within
+     * @return The font of appropriate size.
+     */
+    private Font scaleSingleLineFont(String text, Dimension size) {
         // Make the text fit in one line
-        int fontSize = 20;
-        Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
-        int width = getFontMetrics(tempFont).stringWidth(text);
+        double safetyFactor = size.width * 0.1;
+        double fontSize = 500;
+        Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
+        double width = getFontMetrics(tempFont).stringWidth(text) + safetyFactor;
         fontSize = (size.width / width) * fontSize;
-        Font newFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+        Font newFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
 
         // Check the font size does not exceed height restriction
-        int newHeight = getFontMetrics(newFont).getHeight();
+        double newHeight = getFontMetrics(newFont).getHeight();
         if (newHeight > size.height) {
             fontSize = (size.height * fontSize) / newHeight;
-            newFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+            newFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
         }
 
         return newFont;
     }
 
 
+    /**
+     * Returns a font with a size such that the String 'text' will fit entirely within the Dimension 'size.' This may
+     * be over multiple lines.
+     * @param text The string of text to fit within the bounds
+     * @param size The dimensions to fit the text within
+     * @param maxFontSize The maximum font size the text is allowed to be
+     * @return The font of appropriate size.
+     */
     private Font scaleMultilineFont(String text, Dimension size, int maxFontSize) {
-        int safetyMultiplier = 2;
-        int fontSize = maxFontSize - 1;
-        Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
-        int width = getFontMetrics(tempFont).stringWidth(text) * safetyMultiplier;
-        int height = getFontMetrics(tempFont).getHeight();
+        double safetyMultiplier = 2.0;
+        double fontSize = maxFontSize <= 0 ? 20 : maxFontSize;    //TODO: make this not buggy
+        Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
+        double width = getFontMetrics(tempFont).stringWidth(text) * safetyMultiplier;
+        double height = getFontMetrics(tempFont).getHeight();
 
         while(width * height > size.width * size.height) {
             fontSize--;
-            tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+            tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
             width = getFontMetrics(tempFont).stringWidth(text) * safetyMultiplier;
             height = getFontMetrics(tempFont).getHeight();
         }
 
-        return new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+        System.out.println("Dimensions: " + width + ", " + height + ". Size = " + fontSize);
+        return new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
     }
 }
