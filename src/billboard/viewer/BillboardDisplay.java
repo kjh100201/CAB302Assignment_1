@@ -18,9 +18,8 @@ import java.util.ArrayList;
  */
 public class BillboardDisplay extends JPanel {
     // Configuration constants
-    static private final String default_bg_colour = "#F5F5F5";  // TODO change default background back to F5F5F5
+    static private final String default_bg_colour = "#F4F4F4";
     static private final String default_text_colour = "#000000";
-    static private final Font default_font = new Font(Font.SANS_SERIF, Font.PLAIN, 40);
 
     // Cached references
     private Dimension displaySize;
@@ -51,9 +50,9 @@ public class BillboardDisplay extends JPanel {
         }
 
         setBackgroundColour();
-        addMessageToBillboard();
+        int fontSize = addMessageToBillboard();
         addImageToBillboard();
-        addInfoToBillboard();
+        addInfoToBillboard(fontSize);
     }
 
 
@@ -98,23 +97,26 @@ public class BillboardDisplay extends JPanel {
     /**
      * Adds a message panel to the billboard GUI.
      */
-    private void addMessageToBillboard() {
+    private int addMessageToBillboard() {
         Element messageElement = billboardElements.get(1);
         if (messageElement != null) {
             String msg = getElementText(messageElement);
             JLabel message = new JLabel(msg, SwingConstants.CENTER);
             message.setForeground(getTextColour(messageElement));
-            message.setFont(default_font);    //TODO: make this dynamic size
+            message.setPreferredSize(new Dimension(displaySize.width, displaySize.height/3));   //TODO: make this dynamic
+            Font font = scaleFont(msg, new Dimension(displaySize.width, displaySize.height/3));    //TODO: Make this dynamic
+
+            message.setFont(font);
 
             GridBagConstraints c = new GridBagConstraints();
-            c.fill = GridBagConstraints.HORIZONTAL;
             c.anchor = GridBagConstraints.CENTER;
-            c.weighty = 0.1;
-            c.weightx = 0.1;
             c.gridx = 0;
             c.gridy = 0;
             add(message, c);
+
+            return font.getSize();
         }
+        return -1;
     }
 
 
@@ -137,12 +139,10 @@ public class BillboardDisplay extends JPanel {
 
             //TODO: Add image scaling, perhaps extend JLabel to create a new type
             JLabel picture = new JLabel(new ImageIcon(scaledImage), SwingConstants.CENTER);
+            picture.setPreferredSize(new Dimension(displaySize.width, displaySize.height/3));
 
             GridBagConstraints c = new GridBagConstraints();
-            c.fill = GridBagConstraints.HORIZONTAL;
             c.anchor = GridBagConstraints.CENTER;
-            c.weighty = 0.1;
-            c.weightx = 0.1;
             c.gridx = 0;
             c.gridy = 1;
             add(picture, c);
@@ -153,10 +153,13 @@ public class BillboardDisplay extends JPanel {
     /**
      * Adds an information panel to the billboard GUI.
      */
-    private void addInfoToBillboard()
+    private void addInfoToBillboard(int maxFontSize)
     {
         Element infoElement = billboardElements.get(3);
         if (infoElement != null) {
+            JPanel panel = new JPanel(new GridBagLayout());
+            panel.setPreferredSize(new Dimension((int) (displaySize.width*0.75), displaySize.height/3));    //TODO make this dynamic
+
             String text = getElementText(infoElement);
             JTextPane info = new JTextPane();
             info.setText(text);
@@ -168,21 +171,29 @@ public class BillboardDisplay extends JPanel {
 
             info.setEditable(false);
             info.setFocusable(false);
-            info.setFont(default_font);    //TODO make this dynamic size
+            Font font = scaleMultilineFont(text, new Dimension((int) (displaySize.width*0.75), displaySize.height/3), maxFontSize);  //TODO make this dynamic
+            info.setFont(font);
 
             Color bg_colour = getBackgroundColour(billboardElements.get(0));
             info.setBackground(bg_colour);
+            panel.setBackground(bg_colour);
             Color fg_colour = getTextColour(infoElement);
             info.setForeground(fg_colour);
 
             GridBagConstraints c = new GridBagConstraints();
-            c.fill = GridBagConstraints.HORIZONTAL;
             c.anchor = GridBagConstraints.CENTER;
-            c.weighty = 0.1;
-            c.weightx = 0.1;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.weighty = 1.0;
+            c.weightx = 1.0;
             c.gridx = 0;
-            c.gridy = 2;
-            add(info, c);
+            c.gridy = 0;
+            panel.add(info, c);
+
+            GridBagConstraints d = new GridBagConstraints();
+            d.anchor = GridBagConstraints.CENTER;
+            d.gridx = 0;
+            d.gridy = 2;
+            add(panel, d);
         }
     }
 
@@ -290,5 +301,42 @@ public class BillboardDisplay extends JPanel {
         }
 
         return new Dimension(newWidth, newHeight);
+    }
+
+
+    private Font scaleFont(String text, Dimension size) {
+        // Make the text fit in one line
+        int fontSize = 20;
+        Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+        int width = getFontMetrics(tempFont).stringWidth(text);
+        fontSize = (size.width / width) * fontSize;
+        Font newFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+
+        // Check the font size does not exceed height restriction
+        int newHeight = getFontMetrics(newFont).getHeight();
+        if (newHeight > size.height) {
+            fontSize = (size.height * fontSize) / newHeight;
+            newFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+        }
+
+        return newFont;
+    }
+
+
+    private Font scaleMultilineFont(String text, Dimension size, int maxFontSize) {
+        int safetyMultiplier = 2;
+        int fontSize = maxFontSize - 1;
+        Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+        int width = getFontMetrics(tempFont).stringWidth(text) * safetyMultiplier;
+        int height = getFontMetrics(tempFont).getHeight();
+
+        while(width * height > size.width * size.height) {
+            fontSize--;
+            tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+            width = getFontMetrics(tempFont).stringWidth(text) * safetyMultiplier;
+            height = getFontMetrics(tempFont).getHeight();
+        }
+
+        return new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
     }
 }

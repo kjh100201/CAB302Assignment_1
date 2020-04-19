@@ -27,7 +27,7 @@ public class BillboardFrame extends JFrame {
         }
 
         // Format the billboard GUI according the specifications of a selected XML document
-        String xmlFilePath = "xml_docs/billboard10.xml";
+        String xmlFilePath = "xml_docs/billboard10.xml";    //TODO: Make this a server request
 
         // Set as borderless full screen application
         setExtendedState(JFrame.MAXIMIZED_BOTH);
