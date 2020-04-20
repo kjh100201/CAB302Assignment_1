@@ -18,7 +18,6 @@ import java.util.ArrayList;
  */
 public class BillboardDisplay extends JPanel {
     // Configuration constants
-    static final int BILLBOARD = 0;
     static final int MESSAGE = 1;
     static final int PICTURE = 2;
     static final int INFORMATION = 3;
@@ -99,7 +98,7 @@ public class BillboardDisplay extends JPanel {
 
 
     /**
-     * Adds a message panel to the billboard GUI.
+     * Adds the message component to the billboard GUI.
      */
     private int addMessageToBillboard() {
         Element messageElement = billboardElements.get(1);
@@ -113,10 +112,7 @@ public class BillboardDisplay extends JPanel {
             Font font = scaleSingleLineFont(msg, messageDimensions);
             message.setFont(font);
 
-            GridBagConstraints c = new GridBagConstraints();
-            c.anchor = GridBagConstraints.CENTER;
-            c.gridx = 0;
-            c.gridy = 0;
+            GridBagConstraints c = getStandardGridConstraints(0, 0);
             add(message, c);
 
             return font.getSize();
@@ -126,7 +122,7 @@ public class BillboardDisplay extends JPanel {
 
 
     /**
-     * Adds an image panel to the billboard GUI.
+     * Adds the image component to the billboard GUI.
      */
     private void addImageToBillboard() {
         Element pictureElement = billboardElements.get(2);
@@ -136,27 +132,22 @@ public class BillboardDisplay extends JPanel {
                 return;     //TODO make this case go to the error screen
             }
 
-            // TODO: Clean up and move this to a separate class
             Dimension currentImageSize = new Dimension(image.getWidth(null), image.getHeight(null));
             Dimension imageBoundarySize = getPictureImageDimensions();
             Dimension newImageSize = scaleImageDimensions(imageBoundarySize, currentImageSize);
             Image scaledImage = image.getScaledInstance(newImageSize.width, newImageSize.height, Image.SCALE_SMOOTH);
 
-            //TODO: Add image scaling, perhaps extend JLabel to create a new type
             JLabel picture = new JLabel(new ImageIcon(scaledImage), SwingConstants.CENTER);
             picture.setPreferredSize(getPictureDimensions());
 
-            GridBagConstraints c = new GridBagConstraints();
-            c.anchor = GridBagConstraints.CENTER;
-            c.gridx = 0;
-            c.gridy = 1;
+            GridBagConstraints c = getStandardGridConstraints(0, 1);
             add(picture, c);
         }
     }
 
 
     /**
-     * Adds an information panel to the billboard GUI.
+     * Adds the information component to the billboard GUI.
      */
     private void addInfoToBillboard(int maxFontSize)
     {
@@ -166,10 +157,10 @@ public class BillboardDisplay extends JPanel {
             Dimension infoDimensions = getInfoDimensions();
             panel.setPreferredSize(infoDimensions);
 
+            // Align the text content to the center
             String text = getElementText(infoElement);
             JTextPane info = new JTextPane();
             info.setText(text);
-
             StyledDocument infoText = info.getStyledDocument();
             SimpleAttributeSet textAttr = new SimpleAttributeSet();
             StyleConstants.setAlignment(textAttr, StyleConstants.ALIGN_CENTER);
@@ -180,25 +171,21 @@ public class BillboardDisplay extends JPanel {
             Font font = scaleMultilineFont(text, infoDimensions, maxFontSize - 1);
             info.setFont(font);
 
+            // Set colours
             Color bg_colour = getBackgroundColour(billboardElements.get(0));
             info.setBackground(bg_colour);
             panel.setBackground(bg_colour);
             Color fg_colour = getTextColour(infoElement);
             info.setForeground(fg_colour);
 
-            GridBagConstraints c = new GridBagConstraints();
-            c.anchor = GridBagConstraints.CENTER;
+            // Vertically align the JTextPane component within its parent JPanel
+            GridBagConstraints c = getStandardGridConstraints(0,0);
             c.fill = GridBagConstraints.HORIZONTAL;
             c.weighty = 1.0;
             c.weightx = 1.0;
-            c.gridx = 0;
-            c.gridy = 0;
             panel.add(info, c);
 
-            GridBagConstraints d = new GridBagConstraints();
-            d.anchor = GridBagConstraints.CENTER;
-            d.gridx = 0;
-            d.gridy = 2;
+            GridBagConstraints d = getStandardGridConstraints(0, 2);
             add(panel, d);
         }
     }
@@ -285,8 +272,27 @@ public class BillboardDisplay extends JPanel {
     }
 
 
+    /**
+     * Gets a standard GridBagConstraints object to place a centered GUI component at a specified grid position.
+     * @param gridx Grid x position.
+     * @param gridy Grid y position.
+     * @return The GridBagConstraints object.
+     */
+    private GridBagConstraints getStandardGridConstraints(int gridx, int gridy) {
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = gridx;
+        c.gridy = gridy;
+        return c;
+    }
+
+
+    /**
+     * Gets the dimensions in pixels for the billboard message component, based on what other components will be on the
+     * billboard.
+     * @return The dimensions of the message component.
+     */
     private Dimension getMessageDimensions() {
-        System.out.println("Reached getMessageDimensions");     //TODO remove
         if (billboardElements.get(PICTURE) == null && billboardElements.get(INFORMATION) == null) {
             return new Dimension(displaySize.width, displaySize.height);
         }
@@ -297,8 +303,12 @@ public class BillboardDisplay extends JPanel {
     }
 
 
+    /**
+     * Gets the dimensions in pixels for the billboard picture component, based on what other components will be on the
+     * billboard.
+     * @return The dimensions of the image component.
+     */
     private Dimension getPictureDimensions() {
-        System.out.println("Reached getPictureDimensions");     //TODO remove
         if (billboardElements.get(MESSAGE) == null && billboardElements.get(INFORMATION) == null) {
             return new Dimension(displaySize.width, displaySize.height);
         }
@@ -309,8 +319,12 @@ public class BillboardDisplay extends JPanel {
     }
 
 
+    /**
+     * Gets the boundary dimensions in pixels for the image that goes in the billboard picture component. The image
+     * should fit inside these bounds.
+     * @return The bounding dimensions the image should fit within.
+     */
     private Dimension getPictureImageDimensions() {
-        System.out.println("Reached getPictureImageDimensions");    //TODO remove
         if (billboardElements.get(MESSAGE) != null && billboardElements.get(INFORMATION) != null) {
             return new Dimension(displaySize.width/3, displaySize.height/3);
         }
@@ -318,12 +332,16 @@ public class BillboardDisplay extends JPanel {
     }
 
 
+    /**
+     * Gets the dimensions in pixels for the billboard information component, based on what other components will be on
+     * the billboard.
+     * @return The dimensions of the information component.
+     */
     private Dimension getInfoDimensions() {
-        System.out.println("Reached getInfoDimensions");        //TODO remove
-        if (billboardElements.get(MESSAGE) == null && billboardElements.get(INFORMATION) == null) {
+        if (billboardElements.get(MESSAGE) == null && billboardElements.get(PICTURE) == null) {
             return new Dimension((int) (displaySize.width*0.75), displaySize.height/2);
         }
-        if (billboardElements.get(MESSAGE) == null) {   //Implies that the information component is not null
+        if (billboardElements.get(PICTURE) == null) {   //Implies that the message component is not null
             return new Dimension((int) (displaySize.width*0.75), displaySize.height/2);
         }
         return new Dimension((int) (displaySize.width*0.75), displaySize.height/3);
@@ -391,7 +409,8 @@ public class BillboardDisplay extends JPanel {
      */
     private Font scaleMultilineFont(String text, Dimension size, int maxFontSize) {
         double safetyMultiplier = 2.0;
-        double fontSize = maxFontSize <= 0 ? 20 : maxFontSize;    //TODO: make this not buggy
+        int maxInfoFont = 200;
+        double fontSize = maxFontSize <= 0 ? maxInfoFont : maxFontSize;    //TODO: make this function more reliable
         Font tempFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
         double width = getFontMetrics(tempFont).stringWidth(text) * safetyMultiplier;
         double height = getFontMetrics(tempFont).getHeight();
@@ -403,7 +422,6 @@ public class BillboardDisplay extends JPanel {
             height = getFontMetrics(tempFont).getHeight();
         }
 
-        System.out.println("Dimensions: " + width + ", " + height + ". Size = " + fontSize);
         return new Font(Font.SANS_SERIF, Font.PLAIN, (int) Math.floor(fontSize));
     }
 }

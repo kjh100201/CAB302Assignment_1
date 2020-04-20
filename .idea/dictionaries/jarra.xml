@@ -2,6 +2,8 @@
   <dictionary name="jarra">
     <words>
       <w>celement</w>
+      <w>gridx</w>
+      <w>gridy</w>
       <w>ipady</w>
       <w>mfrom</w>
       <w>weightx</w>
