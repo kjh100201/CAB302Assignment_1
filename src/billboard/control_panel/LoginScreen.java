@@ -75,8 +75,9 @@ public class LoginScreen {
 
         //set frame size and location
         login_frame.setPreferredSize(new Dimension(300, 200));
-        login_frame.setLocationRelativeTo(null);
         login_frame.pack();
+        login_frame.setLocationRelativeTo(null);
+
 
         //visibility
         login_frame.setVisible(true);
