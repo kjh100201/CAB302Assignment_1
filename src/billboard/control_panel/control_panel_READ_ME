@@ -1,0 +1,6 @@
+1. Login Screen & Register Screen can be switched to each other
+2. Login + Register data should be deliver to Server
+    > Login : ID + hashed password
+    > Register : ID + hashed password + permission
+        = Each data should be change to 'String' and send to server as a 'Byte Stream'
+        * For instance, I'll set the 'Login' request as '1', and 'Register' request as '2'

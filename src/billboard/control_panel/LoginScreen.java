@@ -19,10 +19,11 @@ public class LoginScreen {
 
         //set up elements
         JTextField un = new JTextField(13);
-        JTextField pw = new JTextField(13);
+        final JPasswordField pw = new JPasswordField(20);
         JLabel prompt = new JLabel("Please enter username and password");
         JLabel unlabel = new JLabel("username:");
         JLabel pwlabel = new JLabel("password:");
+        pwlabel.setLabelFor(pw);
 
         //prompt
         prompt.setHorizontalAlignment(SwingConstants.CENTER);

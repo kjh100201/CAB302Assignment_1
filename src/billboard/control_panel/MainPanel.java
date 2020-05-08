@@ -1,6 +1,7 @@
 package billboard.control_panel;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,8 +16,12 @@ public class MainPanel {
 //        }
 
         JFrame main_frame = new JFrame("Main Control Panel");
-//        super("Main Control Panel");
+        main_frame.setLayout(null);
+
         JPanel main_panel = new JPanel(new GridLayout(3,1));
+
+        main_panel.setBounds(100,50,400,200);
+
 
         JButton createB = new JButton("Create Billboards");
         JButton listB = new JButton("List Billboards");
